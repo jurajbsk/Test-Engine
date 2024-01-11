@@ -1,0 +1,33 @@
+# Compiled Object files
+*.o
+*.obj
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+
+# Windows resources
+*.rc
+*.res
+
+# IDEs
+.vscode/
+.idea/
+
+# DUB
+.dub
+docs.json
+__dummy.html
+docs/
+
+# Code coverage
+*.lst
