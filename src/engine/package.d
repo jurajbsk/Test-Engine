@@ -1,3 +1,3 @@
 module engine;
 
-public import engine.gameobject;
+public import engine.gameobj;
