@@ -33,12 +33,12 @@ version(Windows)
 			windowName = cast(string)buffer[0..ssize];
 		}
 
-		immutable WindowClassEx windClass = {style:WCStyle.HREDRAW|WCStyle.VREDRAW, windowProc:&windowCallback,
+		immutable WindowClassEx windClass = {style:HREDRAW|VREDRAW, windowProc:&windowCallback,
 		                         instance:cast(immutable)winInstance, className:winClassName.ptr};
 		if(RegisterClassExA(&windClass) == 0) return null;
 
 		void* windowHandle = CreateWindowExA(
-			cast(ExCWStyle)null, className:winClassName.ptr, windowName:windowName.ptr, CWStyle.OVERLAPPEDWINDOW|CWStyle.VISIBLE,
+			0, className:winClassName.ptr, windowName:windowName.ptr, OVERLAPPEDWINDOW|VISIBLE,
 			x:USEDEFAULT, y:USEDEFAULT, width:size[0], height:size[1], parent:null, menu:null, winInstance, null);
 
 		return windowHandle;
@@ -62,7 +62,7 @@ version(Windows)
 			StretchDIBits(dcHndl,
 							0, 0, bitmap.width, bitmap.height,
 							0, 0, right-left, bottom-top,
-							imageBits:bitmap.ptr, &bmInfo, clrCompress.BI_RGB, rasterOp.SRCCOPY);
+							imageBits:bitmap.ptr, &bmInfo, BI_RGB, SRCCOPY);
 		}
 	}
 
@@ -99,7 +99,7 @@ version(Windows)
 					width = right-left;
 					height = bottom-top;
 				}
-				bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: RGBPixel.sizeof*8, compression:clrCompress.BI_RGB));
+				bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: RGBPixel.sizeof*8, compression:BI_RGB));
 				if(bitmap) {
 					import lib.math;
 					Bitmap temp = Bitmap(malloc!RGBPixel(width*height), width, height);
