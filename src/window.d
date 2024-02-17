@@ -60,8 +60,8 @@ version(Windows)
 		with(window)
 		{
 			StretchDIBits(dcHndl,
-							0, 0, bitmap.width, bitmap.height,
 							0, 0, right-left, bottom-top,
+							0, 0, bitmap.width, bitmap.height,
 							imageBits:bitmap.ptr, &bmInfo, BI_RGB, SRCCOPY);
 		}
 	}
