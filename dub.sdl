@@ -12,11 +12,8 @@ targetName "build"
 sourceFiles "version.res"
 
 buildType "debug" {
-	buildOptions "debugMode" "debugInfo"
+	buildOptions "debugMode" "debugInfo" "betterC"
 }
 buildType "release" {
 	buildOptions "releaseMode" "inline" "optimize" "warningsAsErrors" "betterC"
-}
-buildType "profile" {
-	buildOptions "debugMode" "debugInfo" "profile"
 }
