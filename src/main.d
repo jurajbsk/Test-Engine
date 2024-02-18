@@ -36,15 +36,15 @@ extern(C) int main()
 	State result = info.windowHndl ? State.OK : State.Error;
 
 	import lib.time;
-	static Time time;
-	enum State function()[] mainFuncsEnum = [
+	Time time;
+	enum State delegate()[] _mainFuncs = [
 		{time.frame++; time.start = ticks(); return State.OK;},
-		&processMessages,
-		&testPaint,
+		{return processMessages();},
+		{return testPaint();},
 		{return renderWindow(info.windowHndl);},
 		{return testFpsCap(time);}
 	];
-	State function()[mainFuncsEnum.length] mainFuncs = mainFuncsEnum;
+	scope State delegate()[_mainFuncs.length] mainFuncs = _mainFuncs;
 
  	for(ushort i=0; result == State.OK; ++i %= mainFuncs.length)
 	{
