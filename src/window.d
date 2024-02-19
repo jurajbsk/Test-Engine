@@ -101,11 +101,7 @@ version(Windows)
 				}
 				bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: Pixel.sizeof*8, compression:BI_RGB));
 				if(bitmap) {
-					import lib.math;
-					Bitmap temp = Bitmap(malloc!Pixel(width*height), width, height);
-					foreach(i; 0..min(bitmap.length, temp.length)) temp.pixels[i] = bitmap.pixels[i];
-					free(bitmap.ptr);
-					bitmap = temp;
+					bitmap = Bitmap(realloc(bitmap, width*height), width, height);
 				}
 				else bitmap = Bitmap(malloc!Pixel(width*height), width, height);
 			} break;
