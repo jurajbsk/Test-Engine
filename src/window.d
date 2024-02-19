@@ -1,6 +1,6 @@
 module window;
 //////////////
-import graphics.structs;
+import engine.graphics.flat;
 import lib.memory;
 import error;
 
@@ -99,15 +99,15 @@ version(Windows)
 					width = right-left;
 					height = bottom-top;
 				}
-				bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: RGBPixel.sizeof*8, compression:BI_RGB));
+				bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: Pixel.sizeof*8, compression:BI_RGB));
 				if(bitmap) {
 					import lib.math;
-					Bitmap temp = Bitmap(malloc!RGBPixel(width*height), width, height);
+					Bitmap temp = Bitmap(malloc!Pixel(width*height), width, height);
 					foreach(i; 0..min(bitmap.length, temp.length)) temp.pixels[i] = bitmap.pixels[i];
 					free(bitmap.ptr);
 					bitmap = temp;
 				}
-				else bitmap = Bitmap(malloc!RGBPixel(width*height), width, height);
+				else bitmap = Bitmap(malloc!Pixel(width*height), width, height);
 			} break;
 
 			case WM.DESTROY: {
@@ -121,7 +121,7 @@ version(Windows)
 			case WM.PAINT: {
 				PAINTSTRUCT paint;
 				void* paintHndl = BeginPaint(winHndl, &paint);
-				_stretchBits(winHndl, paintHndl);
+				//_stretchBits(winHndl, paintHndl);
 				EndPaint(winHndl, &paint);
 			} break;
 
