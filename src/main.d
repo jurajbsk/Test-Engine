@@ -26,7 +26,7 @@ version(Windows) {
 
 extern(C) int main()
 {
-	__gshared RunInfo info;
+	RunInfo info;
 	version(Windows) {
 		import lib.sys.windows.kernel32;
 		info.instance = GetModuleHandleA();
@@ -51,6 +51,7 @@ extern(C) int main()
 		result = mainFuncs[i]();
 	}
 
+	// Exiting
 	if(result == State.Error) return getErrorCode();
 	debug return result;
 	else return State.Exit;
@@ -58,7 +59,8 @@ extern(C) int main()
 
 State testPaint()
 {
-	import graphics.structs;
+	import engine.graphics.flat.shapes;
+
 	static ubyte test = 0;
 	foreach(ref cur; bitmap)
 	{
@@ -72,13 +74,21 @@ State testPaint()
 			case 2: cur.green = test; break;
 			default: break;
 		}*/
-		union PixelPun{RGBPixel pixel; ubyte[4] colours;}
+		union PixelPun{Pixel pixel; ubyte[4] colours;}
 		(cast(PixelPun*)&cur).colours[(test2+1)%3] = test;
 
 		test++;
 		if(test == 0) test2 = (test2+1)%3;
 	}
 	test++;
+	bitmap.pixels[] = Pixel();
+
+	import engine.parts;
+	with(bitmap) {
+		uint d = height;
+		Square(Vector2_32(width-200, height-200), 200, Pixel(255,255,255,0), 2);
+		Square(Vector2_32(200, 200), 100, Pixel(255,255,255,0), 2);
+	}
 	return State.OK;
 }
 State testFpsCap(Time time)
