@@ -1,7 +1,7 @@
 module main;
 ////////////
 import error;
-import window;
+import engine.window;
 version(D_BetterC) {
 	version(LDC) pragma(LDC_no_moduleinfo);
 }

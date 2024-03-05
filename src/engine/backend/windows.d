@@ -1,4 +1,4 @@
-module window;
+module engine.backend.windows;
 //////////////
 import engine.graphics.flat;
 import lib.memory;
@@ -13,7 +13,7 @@ version(Windows)
 	alias user32 = lib.sys.windows.user32;
 	alias gdi32 = lib.sys.windows.gdi32;
 
-	string winClassName = "TestEngineWindow";
+	enum string winClassName = "TestEngineWindow";
 
 	nothrow:
 
@@ -104,6 +104,8 @@ version(Windows)
 					bitmap = Bitmap(realloc(bitmap, width*height), width, height);
 				}
 				else bitmap = Bitmap(malloc!Pixel(width*height), width, height);
+
+				renderWindow(winHndl);
 			} break;
 
 			case WM.DESTROY: {
