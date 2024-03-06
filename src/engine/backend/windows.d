@@ -5,6 +5,7 @@ import lib.memory;
 import error;
 
 __gshared Bitmap bitmap;
+scope nothrow State delegate()[] WindowUpdate;
 
 version(Windows)
 {
@@ -105,7 +106,13 @@ version(Windows)
 				}
 				else bitmap = Bitmap(malloc!Pixel(width*height), width, height);
 
-				renderWindow(winHndl);
+				foreach(curFunc; WindowUpdate)
+				{
+					State ret = curFunc();
+					if(ret == State.Exit) {
+						break;
+					}
+				}
 			} break;
 
 			case WM.DESTROY: {

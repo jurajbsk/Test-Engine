@@ -7,7 +7,7 @@ version(D_BetterC) {
 }
 
 enum uint fpsCap = 10;
-immutable string windowName = "Test Engine";
+enum string windowName = "Test Engine";
 
 struct RunInfo {
 	void* instance;
@@ -37,14 +37,17 @@ extern(C) int main()
 
 	import lib.time;
 	Time time;
-	enum State delegate()[] _mainFuncs = [
+	alias FuncType = State delegate();
+	enum FuncType[] _mainFuncs = [
 		{time.frame++; time.start = ticks(); return State.OK;},
 		{return processMessages();},
+		{return testFpsCap(time);},
 		{return testPaint();},
 		{return renderWindow(info.windowHndl);},
-		{return testFpsCap(time);}
 	];
-	scope State delegate()[_mainFuncs.length] mainFuncs = _mainFuncs;
+	scope FuncType[_mainFuncs.length] mainFuncs = _mainFuncs;
+	// Functions for when the window is resized
+	WindowUpdate = cast(State delegate() nothrow[])mainFuncs[2..$];
 
  	for(ushort i=0; result == State.OK; ++i %= mainFuncs.length)
 	{
@@ -65,15 +68,6 @@ State testPaint()
 	foreach(ref cur; bitmap)
 	{
 		static ubyte test2 = 0;
-		//cur.red = test;
-		//cur.green = cast(ubyte)(test*2);
-		//cur.blue = cast(ubyte)(test*3);
-		/*switch(test2) {
-			case 0: cur.red = test; break;
-			case 1: cur.blue = test; break;
-			case 2: cur.green = test; break;
-			default: break;
-		}*/
 		union PixelPun{Pixel pixel; ubyte[4] colours;}
 		(cast(PixelPun*)&cur).colours[(test2+1)%3] = test;
 
@@ -91,14 +85,15 @@ State testPaint()
 	}
 	return State.OK;
 }
+
+import lib.time;
 State testFpsCap(Time time)
 {
-	import lib.time;
 	double delay = cast(double)(ticks() - time.start)/freq;
-	double target = double(1)/fpsCap;
+	enum double target = double(1)/fpsCap;
 	if(delay < target) {
-		uint sleepT = cast(uint)((target - delay)*1000);
-		sleep(sleepT);
+		uint sleepTime = cast(uint)((target - delay)*1000);
+		sleep(sleepTime);
 	}
 	return State.OK;
 }
