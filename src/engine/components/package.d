@@ -1,5 +1,5 @@
-module engine.parts;
-public import engine.parts.vector;
+module engine.components;
+public import engine.components.vector;
 
 struct Transform {
 	Vector2 pos;

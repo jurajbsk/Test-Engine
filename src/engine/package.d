@@ -3,18 +3,18 @@ import lib.memory.list;
 
 @safe pure:
 
-struct SceneObject {
+struct GameObject {
 	void delegate() OnStart, OnUpdate;
 }
 
 struct Scene {
-	List!SceneObject objlist;
+	List!GameObject objlist;
 
 	void Clear()
 	{
 		objlist.clear();
 	}
-	void Instantiate(SceneObject obj)
+	void Instantiate(GameObject obj)
 	{
 		objlist.add(obj);
 	}

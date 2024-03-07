@@ -1,4 +1,4 @@
-module error;
+module engine.error;
 
 enum State {
 	Exit = 0,

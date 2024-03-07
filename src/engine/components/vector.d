@@ -1,10 +1,10 @@
-module engine.parts.vector;
+module engine.components.vector;
 
 struct Vector2 {
 	float x;
 	float y;
 }
-struct UVector2 {
+struct Vector2_u32 {
 	uint x;
 	uint y;
 }

@@ -1,5 +1,5 @@
 module engine.graphics.flat.shapes;
-import engine.parts;
+import engine.components;
 
 nothrow pure @safe:
 

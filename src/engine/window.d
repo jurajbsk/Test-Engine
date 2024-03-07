@@ -1,7 +1,7 @@
 module engine.window;
 
 version(Windows) {
-	public import engine.backend.windows :
+	public import backend.win32 :
 		bitmap,
 		WindowUpdate,
 		initializeWindow,

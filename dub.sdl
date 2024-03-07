@@ -1,15 +1,10 @@
 name "testengine"
-description "Why are you here?"
+description "Game Engine libraru~"
 authors "Juraj B. <jurajbalog805@gmail.com>"
 copyright "Copyright (C) 2024 Juraj B. Plz no copy without permission uwu."
 license "proprietary"
 
 dependency "crafstd" version="*"
-
-targetType "executable"
-targetPath "bin/$BUILD_TYPE/"
-targetName "build"
-sourceFiles "version.res"
 
 buildType "debug" {
 	buildOptions "debugMode" "debugInfo" "betterC"

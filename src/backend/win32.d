@@ -1,8 +1,8 @@
-module engine.backend.windows;
+module backend.win32;
 //////////////
 import engine.graphics.flat;
 import lib.memory;
-import error;
+import engine.error;
 
 __gshared Bitmap bitmap;
 scope nothrow State delegate()[] WindowUpdate;
