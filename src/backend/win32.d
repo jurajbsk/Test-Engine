@@ -1,142 +1,144 @@
 module backend.win32;
-//////////////
-import engine.graphics.flat;
+version(Windows) @safe nothrow:
 import lib.memory;
+import lib.memory.list;
+import backend.window;
 import engine.error;
+import engine.primitives;
+import engine.graphics.flat;
 
-__gshared Bitmap bitmap;
-scope nothrow State delegate()[] WindowUpdate;
+List!(Window*) windowList = {[null], 1};
+enum string winClassName = "LLE";
 
-version(Windows)
+import lib.sys.windows.user32;
+import lib.sys.windows.gdi32;
+alias user32 = lib.sys.windows.user32;
+alias gdi32 = lib.sys.windows.gdi32;
+
+State initializeWindow(ref Window buffer, const string windowName, void* winInstance) @trusted
 {
-	import lib.sys.windows.user32;
-	import lib.sys.windows.gdi32;
-	alias user32 = lib.sys.windows.user32;
-	alias gdi32 = lib.sys.windows.gdi32;
+	if(!windowList[0]) {
+		windowList[0] = &buffer;
+	}
+	else {
+		windowList.add(&buffer);
+	}
 
-	enum string winClassName = "TestEngineWindow";
+	user32.moduleInit();
+	gdi32.moduleInit();
+	WindowClassEx windClass = {style:HREDRAW|VREDRAW, windowProc:&windowCallback,
+								instance:winInstance, className:&winClassName[0]};
+	if(RegisterClassExA(windClass) == 0) return State.Error;
 
-	nothrow:
+	int ifdef(int x) => (x)? x : USEDEFAULT;
+	void* windHandle;
+	with(buffer) {
+		windHandle = CreateWindowExA(
+		0, className:&winClassName[0], windowName:&windowName[0], OVERLAPPEDWINDOW|VISIBLE,
+		x:ifdef(position.x), y:ifdef(position.y), width:ifdef(size.x), height:ifdef(size.y), parent:null, menu:null, winInstance, null);
+	}
+	
+	buffer.handle = windHandle;
+	return State.OK;
+}
 
-	void* initializeWindow(string windowName, const void* winInstance, const int[2] size = [USEDEFAULT, USEDEFAULT])
+State renderWindow(Window wind, Bitmap bitmap)
+{
+	void* winDC = GetDC(wind.handle);
+	_stretchBits(wind.handle, winDC, bitmap);
+	ReleaseDC(wind.handle, winDC);
+
+	return State.OK;
+}
+
+void _stretchBits(void* winHndl, void* dcHndl, Bitmap bitmap) @trusted
+{
+	RECT window;
+	GetClientRect(winHndl, window);
+	with(window)
 	{
-		user32.moduleInit();
-		gdi32.moduleInit();
+		StretchDIBits(dcHndl,
+						0, 0, right-left, bottom-top,
+						0, 0, bitmap.width, bitmap.height,
+						imageBits:bitmap.ptr, &bmInfo, BI_RGB, SRCCOPY);
+	}
+}
 
-		{
-			import lib.sys.windows.advapi32;
-			lib.sys.windows.advapi32.moduleInit();
-			char* buffer;
-			int ssize = 0;
-			GetUserNameA(buffer, &ssize);
-			buffer = malloc!char(ssize).ptr;
-			GetUserNameA(buffer, &ssize);
-			windowName = cast(string)buffer[0..ssize];
+bool active = true;
+State processMessages()
+{
+	static Message messageBuffer;
+	State errCode;
+	while(PeekMessageA(&messageBuffer, null, 0, 0, PeekMessageFlag.REMOVE))
+	{
+		TranslateMessage(&messageBuffer);
+		DispatchMessageA(&messageBuffer);
+	}
+	if(!active) return State.Exit;
+	return State.OK;
+}
+
+BITMAPINFO bmInfo;
+extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, long lPar)
+{
+	long result = 0;
+
+	Window* windptr;
+	foreach(Window* cur; windowList) {
+		if(cur.handle == winHndl || cur.handle == null) {
+			windptr = cur;
 		}
-
-		immutable WindowClassEx windClass = {style:HREDRAW|VREDRAW, windowProc:&windowCallback,
-		                         instance:cast(immutable)winInstance, className:winClassName.ptr};
-		if(RegisterClassExA(&windClass) == 0) return null;
-
-		void* windowHandle = CreateWindowExA(
-			0, className:winClassName.ptr, windowName:windowName.ptr, OVERLAPPEDWINDOW|VISIBLE,
-			x:USEDEFAULT, y:USEDEFAULT, width:size[0], height:size[1], parent:null, menu:null, winInstance, null);
-
-		return windowHandle;
 	}
 
-	State renderWindow(void* winHndl)
+	with(WM) switch(message)
 	{
-		void* winDC = GetDC(winHndl);
-		_stretchBits(winHndl, winDC);
-		ReleaseDC(winHndl, winDC);
+		default: {
+			result = DefWindowProcA(winHndl, message, wPar, lPar);
+		} break;
 
-		return State.OK;
-	}
+		case SIZE: {
+			RECT wRect;
+			GetClientRect(winHndl, wRect);
+			int width, height;
+			with(wRect) {
+				width = right-left;
+				height = bottom-top;
+			}
+			bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: Pixel.sizeof*8, compression:BI_RGB));
+			if(windptr.bitmap) {
+				windptr.bitmap = Bitmap(realloc(windptr.bitmap, width*height), width, height);
+			}
+			else windptr.bitmap = Bitmap(malloc!Pixel(width*height), width, height);
 
-	void _stretchBits(void* winHndl, void* dcHndl)
-	{
-		RECT window;
-		GetClientRect(winHndl, window);
-		with(window)
-		{
-			StretchDIBits(dcHndl,
-							0, 0, right-left, bottom-top,
-							0, 0, bitmap.width, bitmap.height,
-							imageBits:bitmap.ptr, &bmInfo, BI_RGB, SRCCOPY);
-		}
-	}
-
-	bool active = true;
-	State processMessages()
-	{
-		static Message messageBuffer;
-		State errCode;
-		while(PeekMessageA(&messageBuffer, null, 0, 0, PeekMessageFlag.REMOVE))
-		{
-			TranslateMessage(&messageBuffer);
-			DispatchMessageA(&messageBuffer);
-		}
-		if(!active) return State.Exit;
-		return State.OK;
-	}
-
-	BITMAPINFO bmInfo;
-	extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, long lPar) nothrow
-	{
-		long result = 0;
-
-		switch(message)
-		{
-			default: {
-				result = DefWindowProcA(winHndl, message, wPar, lPar);
-			} break;
-
-			case WM.SIZE: {
-				RECT wRect;
-				GetClientRect(winHndl, wRect);
-				int width, height;
-				with(wRect) {
-					width = right-left;
-					height = bottom-top;
+			foreach(Func curFunc; windptr.onResize)
+			{
+				State ret = curFunc();
+				if(ret == State.Exit) {
+					break;
 				}
-				bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: Pixel.sizeof*8, compression:BI_RGB));
-				if(bitmap) {
-					bitmap = Bitmap(realloc(bitmap, width*height), width, height);
-				}
-				else bitmap = Bitmap(malloc!Pixel(width*height), width, height);
+			}
+		} break;
 
-				foreach(curFunc; WindowUpdate)
-				{
-					State ret = curFunc();
-					if(ret == State.Exit) {
-						break;
-					}
-				}
-			} break;
+		case DESTROY: {
+			active = false;
+		} break;
 
-			case WM.DESTROY: {
-				active = false;
-			} break;
+		case CLOSE: {
+			active = false;
+		} break;
 
-			case WM.CLOSE: {
-				active = false;
-			} break;
+		case PAINT: {
+			PAINTSTRUCT paint;
+			void* paintHndl = BeginPaint(winHndl, paint);
+			EndPaint(winHndl, paint);
+		} break;
 
-			case WM.PAINT: {
-				PAINTSTRUCT paint;
-				void* paintHndl = BeginPaint(winHndl, &paint);
-				//_stretchBits(winHndl, paintHndl);
-				EndPaint(winHndl, &paint);
-			} break;
+		case ACTIVATEAPP: {
+		} break;
 
-			case WM.ACTIVATEAPP: {
-			} break;
-
-			case WM.SETCURSOR: {
-				//SetCursor(null);
-			} break;
-		}
-		return result;
+		case SETCURSOR: {
+			//SetCursor(null);
+		} break;
 	}
+	return result;
 }

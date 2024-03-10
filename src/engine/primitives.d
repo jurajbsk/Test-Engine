@@ -1,8 +1,12 @@
 module engine.primitives;
 
-struct Vector2(T = float) {
-	T x;
-	T y;
+union Vector2(T = float) {
+	T[2] pos;
+	alias pos this;
+	struct {
+		T x;
+		T y;
+	}
 }
 
 struct Transform {

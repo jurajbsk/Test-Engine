@@ -1,4 +1,5 @@
 module engine.error;
+@safe nothrow:
 
 enum State {
 	Exit = 0,
