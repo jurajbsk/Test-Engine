@@ -1,5 +1,5 @@
 module engine.graphics.flat.shapes;
-import engine.components;
+import engine.primitives;
 
 nothrow pure @safe:
 
@@ -21,7 +21,7 @@ struct Bitmap {
 	}
 
 	import lib.math;
-	void Square(Vector2_32 pos, uint side, Pixel colour = Pixel(), int outline = 0)
+	void Square(Vector2!int pos, uint side, Pixel colour = Pixel(), int outline = 0)
 	{
 		// TODO: Simplify breaking by first printing colour, then checking x outline for next pixel
 		uint d = min(side+pos.y, height-pos.y);
