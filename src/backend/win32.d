@@ -1,19 +1,18 @@
 module backend.win32;
-version(Windows) @safe nothrow:
 import lib.memory;
 import lib.memory.list;
 import backend.window;
 import engine.error;
 import engine.primitives;
 import engine.graphics.flat;
-
-List!(Window*) windowList = {[null], 1};
-enum string winClassName = "LLE";
-
 import lib.sys.windows.user32;
 import lib.sys.windows.gdi32;
 alias user32 = lib.sys.windows.user32;
 alias gdi32 = lib.sys.windows.gdi32;
+
+version(Windows) @safe nothrow:
+List!(Window*) windowList = {[null], 1};
+enum string winClassName = "LLE";
 
 State initializeWindow(ref Window buffer, const string windowName, void* winInstance) @trusted
 {
@@ -83,17 +82,38 @@ extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, lon
 {
 	long result = 0;
 
-	Window* windptr;
+	Window* window;
 	foreach(Window* cur; windowList) {
 		if(cur.handle == winHndl || cur.handle == null) {
-			windptr = cur;
+			window = cur;
 		}
 	}
 
 	with(WM) switch(message)
 	{
-		default: {
-			result = DefWindowProcA(winHndl, message, wPar, lPar);
+		case LBUTTONDOWN, LBUTTONUP, RBUTTONDOWN, RBUTTONUP, MBUTTONDOWN, MBUTTONUP, XBUTTONDOWN, XBUTTONUP: with(Mouse) {
+			foreach(i, button; [Left, Right, Keys.Shift, Keys.Ctrl, Middle, Button4, Button5]) {
+				window.input[button].wasDown = window.input[button].isDown;
+				window.input[button].isDown = cast(bool)(wPar & (1<<i));
+			}
+			window.input.mouse.position = cast(short[2])[cast(short)lPar, window.size.y - cast(short)(lPar >>> 16)];
+		} break;
+		case KEYDOWN, KEYUP, SYSKEYDOWN, SYSKEYUP: {
+			Keys keycode = cast(Keys) wPar;
+			window.input[keycode].wasDown = cast(bool)(lPar & (1<<30));
+			window.input[keycode].isDown = cast(bool)(lPar & (1<<31));
+			window.input[keycode].wasDown = !!(lPar & (1<<30));
+			window.input[keycode].isDown = !(lPar & (1<<31));
+		} break;
+
+		case PAINT: {
+			PAINTSTRUCT paint;
+			void* paintHndl = BeginPaint(winHndl, paint);
+			EndPaint(winHndl, paint);
+		} break;
+
+		case SETCURSOR: {
+			//SetCursor(null);
 		} break;
 
 		case SIZE: {
@@ -105,12 +125,12 @@ extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, lon
 				height = bottom-top;
 			}
 			bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: Pixel.sizeof*8, compression:BI_RGB));
-			if(windptr.bitmap) {
-				windptr.bitmap = Bitmap(realloc(windptr.bitmap, width*height), width, height);
+			if(window.bitmap) {
+				window.bitmap = Bitmap(realloc(window.bitmap, width*height), width, height);
 			}
-			else windptr.bitmap = Bitmap(malloc!Pixel(width*height), width, height);
+			else window.bitmap = Bitmap(malloc!Pixel(width*height), width, height);
 
-			foreach(Func curFunc; windptr.onResize)
+			foreach(Func curFunc; window.onResize)
 			{
 				State ret = curFunc();
 				if(ret == State.Exit) {
@@ -127,17 +147,11 @@ extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, lon
 			active = false;
 		} break;
 
-		case PAINT: {
-			PAINTSTRUCT paint;
-			void* paintHndl = BeginPaint(winHndl, paint);
-			EndPaint(winHndl, paint);
-		} break;
-
 		case ACTIVATEAPP: {
 		} break;
 
-		case SETCURSOR: {
-			//SetCursor(null);
+		default: {
+			result = DefWindowProcA(winHndl, message, wPar, lPar);
 		} break;
 	}
 	return result;
