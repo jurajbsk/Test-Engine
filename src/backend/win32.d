@@ -10,11 +10,11 @@ import lib.sys.windows.gdi32;
 alias user32 = lib.sys.windows.user32;
 alias gdi32 = lib.sys.windows.gdi32;
 
-version(Windows) @safe nothrow:
+version(Windows):
 List!(Window*) windowList = {[null], 1};
 enum string winClassName = "LLE";
 
-State initializeWindow(ref Window buffer, const string windowName, void* winInstance) @trusted
+State initializeWindow(ref Window buffer, const string windowName, void* winInstance)
 {
 	if(!windowList[0]) {
 		windowList[0] = &buffer;
@@ -50,7 +50,7 @@ State renderWindow(Window wind, Bitmap bitmap)
 	return State.OK;
 }
 
-void _stretchBits(void* winHndl, void* dcHndl, Bitmap bitmap) @trusted
+void _stretchBits(void* winHndl, void* dcHndl, Bitmap bitmap)
 {
 	RECT window;
 	GetClientRect(winHndl, window);
@@ -78,7 +78,7 @@ State processMessages()
 }
 
 BITMAPINFO bmInfo;
-extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, long lPar)
+extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, long lPar) @trusted
 {
 	long result = 0;
 
@@ -96,12 +96,10 @@ extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, lon
 				window.input[button].wasDown = window.input[button].isDown;
 				window.input[button].isDown = cast(bool)(wPar & (1<<i));
 			}
-			window.input.mouse.position = cast(short[2])[cast(short)lPar, window.size.y - cast(short)(lPar >>> 16)];
+			window.input.mouse.position.arr = cast(short[2])[cast(short)lPar, window.size.y - cast(short)(lPar >>> 16)];
 		} break;
 		case KEYDOWN, KEYUP, SYSKEYDOWN, SYSKEYUP: {
 			Keys keycode = cast(Keys) wPar;
-			window.input[keycode].wasDown = cast(bool)(lPar & (1<<30));
-			window.input[keycode].isDown = cast(bool)(lPar & (1<<31));
 			window.input[keycode].wasDown = !!(lPar & (1<<30));
 			window.input[keycode].isDown = !(lPar & (1<<31));
 		} break;
@@ -119,10 +117,10 @@ extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, lon
 		case SIZE: {
 			RECT wRect;
 			GetClientRect(winHndl, wRect);
-			int width, height;
+			short width, height;
 			with(wRect) {
-				width = right-left;
-				height = bottom-top;
+				width = cast(short)(right-left);
+				height = cast(short)(bottom-top);
 			}
 			bmInfo = BITMAPINFO(BITMAPINFOHEADER(width: width, height: height, bitCount: Pixel.sizeof*8, compression:BI_RGB));
 			if(window.bitmap) {

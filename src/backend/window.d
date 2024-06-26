@@ -4,11 +4,12 @@ import engine.primitives;
 import engine.graphics.flat.shapes;
 public import engine.input;
 
-alias Func = nothrow State delegate() @safe;
+alias Func = State delegate();
 struct Window {
+	Vec2!short size;
+	Vec2!short position;
+
 	void* handle;
-	Vector2!short size;
-	Vector2!short position;
 	Func[] onResize;
 	bool shouldQuit;
 	Input input;
