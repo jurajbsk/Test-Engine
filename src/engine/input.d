@@ -26,6 +26,6 @@ struct Input {
 
 // Stuff not covered by 'KeyData' struct
 struct MouseData {
-	Vector2!short position;
+	Vec2!short position;
 	bool dblClick;
 }
