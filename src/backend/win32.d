@@ -11,8 +11,8 @@ alias user32 = lib.sys.windows.user32;
 alias gdi32 = lib.sys.windows.gdi32;
 
 version(Windows):
-List!(Window*) windowList = {[null], 1};
-enum string winClassName = "LLE";
+__gshared List!(Window*) windowList = {[null], 1};
+immutable string winClassName = "LLE";
 
 State initializeWindow(ref Window buffer, const string windowName, void* winInstance)
 {
@@ -41,7 +41,7 @@ State initializeWindow(ref Window buffer, const string windowName, void* winInst
 	return State.OK;
 }
 
-State renderWindow(Window wind, Bitmap bitmap)
+State renderWindow(Window wind, ref Bitmap bitmap)
 {
 	void* winDC = GetDC(wind.handle);
 	_stretchBits(wind.handle, winDC, bitmap);
@@ -50,7 +50,7 @@ State renderWindow(Window wind, Bitmap bitmap)
 	return State.OK;
 }
 
-void _stretchBits(void* winHndl, void* dcHndl, Bitmap bitmap)
+void _stretchBits(void* winHndl, void* dcHndl, ref Bitmap bitmap)
 {
 	RECT window;
 	GetClientRect(winHndl, window);
@@ -63,10 +63,10 @@ void _stretchBits(void* winHndl, void* dcHndl, Bitmap bitmap)
 	}
 }
 
-bool active = true;
+__gshared bool active = true;
+__gshared Message messageBuffer;
 State processMessages()
 {
-	static Message messageBuffer;
 	State errCode;
 	while(PeekMessageA(&messageBuffer, null, 0, 0, PeekMessageFlag.REMOVE))
 	{
@@ -77,7 +77,7 @@ State processMessages()
 	return State.OK;
 }
 
-BITMAPINFO bmInfo;
+__gshared BITMAPINFO bmInfo;
 extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, long lPar) @trusted
 {
 	long result = 0;
@@ -147,6 +147,10 @@ extern(Windows) long windowCallback(void* winHndl, uint message, ulong wPar, lon
 
 		case ACTIVATEAPP: {
 		} break;
+
+		// case ENTERSIZEMOVE, EXITSIZEMOVE: {
+
+		// }
 
 		default: {
 			result = DefWindowProcA(winHndl, message, wPar, lPar);

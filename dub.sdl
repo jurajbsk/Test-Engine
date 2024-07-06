@@ -7,8 +7,13 @@ license "proprietary"
 dependency "crafstd" version="*"
 
 buildType "debug" {
-	buildOptions "debugMode" "debugInfo" "betterC"
+	buildOptions "debugMode" "debugInfoC" "betterC"
+}
+buildType "unittest" {
+	buildOptions "unittests" "debugMode" "debugInfo" "warningsAsErrors" "betterC"
 }
 buildType "release" {
-	buildOptions "releaseMode" "inline" "optimize" "warningsAsErrors" "betterC"
+	buildOptions "releaseMode" "inline" "optimize" "warningsAsErrors" "betterC" "noBoundsCheck"
 }
+
+dflags "-vtls" platform="dmd"
