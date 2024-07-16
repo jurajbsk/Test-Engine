@@ -1,11 +1,13 @@
 module engine.primitives.vector;
 
-string opError(string op, T, U)()
-{
-	return "Operator "~op~" cannot be used with types "~T.stringof~" and "~U.stringof;
-}
+alias Vec2_i16 = Vector2!short;
+alias Vec2_u16 = Vector2!ushort;
+alias Vec2_i32 = Vector2!int;
+alias Vec2_u32 = Vector2!uint;
+alias Vec2_i64 = Vector2!long;
+alias Vec2_u64 = Vector2!ulong;
 
-union Vec2(T = float) {
+union Vector2(T = float) {
 	struct {
 		T x;
 		T y;
@@ -18,14 +20,18 @@ union Vec2(T = float) {
 		arr = other;
 	}
 	
-	Vec2!U opCast(U: Vec2!U)() {
-		return Vec2!U(cast(U)x, cast(U)y);
+	Vector2!U opCast(U : Vector2!U)() const {
+		return Vector2!U(cast(U)x, cast(U)y);
 	}
-	Vec2!T opBinary(string op, U)(U rhs)
+	Vector2!T opBinary(string op, U : Vector2)(U rhs)
     {
-        return Vec2!T(mixin("x", op, "rhs"), mixin("y", op, "rhs"));
+        return Vector2!T(mixin("x", op, "rhs.x"), mixin("y", op, "rhs.y"));
     }
-	Vec2!T opBinaryRight(string op, U)(U lhs) => opBinary!(op)(lhs);
+	Vector2!T opBinary(string op, U)(U rhs)
+    {
+        return Vector2!T(mixin("x", op, "rhs"), mixin("y", op, "rhs"));
+    }
+	Vector2!T opBinaryRight(string op, U)(U lhs) => opBinary!(op)(lhs);
 
-	enum one = Vec2!T(1,1);
+	enum one = Vector2!T(1,1);
 }

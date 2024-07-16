@@ -6,8 +6,8 @@ public import engine.input;
 
 alias Func = State delegate();
 struct Window {
-	Vec2!short size;
-	Vec2!short position;
+	Vec2_u16 size;
+	Vec2_u16 position;
 
 	void* handle;
 	Func[] onResize;

@@ -22,7 +22,7 @@ struct Bitmap {
 }
 
 import lib.math;
-void Square(ref Bitmap bits, Vec2!short pos, ushort side, Pixel colour = Pixel(), short outline = 0)
+void Square(ref Bitmap bits, Vec2_i16 pos, ushort side, Pixel colour = Pixel(), ushort outline = 0)
 {
 	// TODO: Simplify breaking by first printing colour, then checking x outline for next pixel
 	for(short i = max!short(pos.y, 0); i < min(side+pos.y, bits.height); i++)
